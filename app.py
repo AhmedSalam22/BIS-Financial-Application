@@ -11,7 +11,6 @@ st.title("Financial Application")
 
 
 
-@st.cache(persist=True)
 def ratio_analysis():
     df = pd.read_csv("ratio analysis.csv" )
     return df 
@@ -54,6 +53,14 @@ liquidity_inputs = {
     "Marketable securitis": 1.0
 }
 
+Operating_cycles_inputs = {
+    "cost of goods sold": 1.0 ,
+    "average inventory" : 1.0 ,
+    "Net sales": 1.0 , 
+    "Average gross receivables": 1.0,
+
+}
+
 def profitability_inputs_f():
     for k , v in profitability_inputs.items():
         profitability_inputs[k] = st.number_input("Enter {}".format(k)  , 1.0)
@@ -61,6 +68,10 @@ def profitability_inputs_f():
 def liquidity_inputs_f():
     for k , v in liquidity_inputs.items():
         liquidity_inputs[k] = st.number_input("Enter {}".format(k)  , 1.0)
+
+def operating_inputs_f():
+    for k , v in Operating_cycles_inputs.items():
+        Operating_cycles_inputs[k] = st.number_input("Enter {}".format(k)  , 1.0)
 
 def result_profitability():
     result = {
@@ -78,25 +89,57 @@ def result_profitability():
     st.markdown("#### Rate of return on assets (return on investment )--ROI= `{:.2f}` pound".format(result["ROI"]))
     st.markdown("#### Rate of return on total equity= `{:.2f}` pound".format(result["ROROTE"]))
 
+def result_liquidity():
+    liq_result = {
+        "Current Ratio": liquidity_inputs["Current assets"] /  liquidity_inputs["current liabilities"] ,
+        "Acid-test ratio": (liquidity_inputs["Cash"] + liquidity_inputs["Receivables"] +liquidity_inputs["Marketable securitis"] )/  liquidity_inputs["current liabilities"] ,
+        "Quick Ratio" : (liquidity_inputs["Current assets"] -( liquidity_inputs["Inventory"] +liquidity_inputs["Prepayments"]) )/  liquidity_inputs["current liabilities"] ,
+        "Cash Ratio": (liquidity_inputs["Cash"] + liquidity_inputs["Marketable securitis"]) / liquidity_inputs["current liabilities"]
+
+    }
+    for k , v in liq_result.items():
+        st.markdown("#### {k} is `{v:.2f}` times".format(k=k, v=v))
+
+def result_oprerating_cycle():
+    #     "cost of goods sold": 1.0 ,
+    # "average inventory" : 1.0 ,
+    # "Net sales": 1.0 , 
+    # "Average gross receivables": 1.0,
+    inventoryTurnOverTimes = Operating_cycles_inputs["cost of goods sold"] / Operating_cycles_inputs["average inventory"]
+    inventoryTurnOverDays =  365 / inventoryTurnOverTimes 
+    AccRecTimes = Operating_cycles_inputs["Net sales"] / Operating_cycles_inputs["Average gross receivables"]
+    AccRecDays = 365 / AccRecTimes
+    OC = inventoryTurnOverDays + AccRecDays
+  
+    operating_result = {
+        "Inventory trunover in times": inventoryTurnOverTimes ,
+        "Inventory trunover in days" : inventoryTurnOverDays ,
+        "Acc. Rec. trunover in times": AccRecTimes ,
+        "Acc. Rec. trunover in days" : AccRecDays,
+        "Operating Cycle in term of days" : OC 
+
+    }
+    for k , v in operating_result.items():
+        st.markdown("#### {k} is `{v:.2f}` ".format(k=k, v=v))
 
 
 if st.sidebar.checkbox("ratio analysis" , False):
     if st.checkbox("Main key points" , False):
         st.table(ratio_analysis())
-    analysis_options = st.sidebar.radio("What type of analysis do you want" , ["All" , "Profitability" , "Liquidity" , "Operating cycle analysis"])
+    analysis_options = st.sidebar.radio("What type of analysis do you want" , ["Profitability" , "Liquidity" , "Operating cycle analysis"])
     if analysis_options == "Profitability":
         profitability_inputs_f()
+        if st.checkbox("Show result" , False):
+            result_profitability()
     elif analysis_options == "Liquidity":
         liquidity_inputs_f()
-    elif analysis_options == "All":
-        profitability_inputs_f()
-        liquidity_inputs_f()
-
-    if st.checkbox("Show result" , False):
-        result_profitability()
-
-
-
+        if st.checkbox("Show result" , False):
+            result_liquidity()
+    elif analysis_options == "Operating cycle analysis":
+        operating_inputs_f()
+        if st.checkbox("Show result" , False):
+            result_oprerating_cycle()
+  
         
 if st.sidebar.checkbox("Compare between stocks return" , False):
     
